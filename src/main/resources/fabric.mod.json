@@ -4,7 +4,7 @@
   "version": "${version}",
   "name": "Spamton",
   "description": "Spamton-inspired merchant NPC with glasses, unkillable spectacle, and dynamic kromer trades.",
-  "environment": "server",
+  "environment": "*",
   "entrypoints": {
     "main": [
       "com.spamton.SpamtonMod"
@@ -14,8 +14,8 @@
     "spamton.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.16.0",
-    "minecraft": "~1.21.1",
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.11",
     "fabric-api": "*"
   }
 }

@@ -1,6 +1,8 @@
 package com.spamton;
 
 import com.spamton.command.SpamtonCommands;
+import com.spamton.entity.SpamtonDamageHandler;
+import com.spamton.entity.SpamtonTickHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
