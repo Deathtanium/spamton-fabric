@@ -1,1 +1,0 @@
-{"required":true,"package":"com.spamton.mixin","mixins":["SpamtonExplosionSoundMixin","SpamtonGlassesPersistenceMixin","SpamtonMerchantContainerMixin","SpamtonMerchantMenuMixin","SpamtonMerchantMixin","SpamtonMerchantResultSlotMixin","SpamtonTradeExecutionMixin"]}
