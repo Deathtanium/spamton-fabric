@@ -12,14 +12,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Builds special trade result items with custom names and lore (no italics).
@@ -84,13 +87,14 @@ public final class SpamtonSpecialItems {
         stack.set(DataComponents.LORE, new ItemLore(List.of(
                 Component.literal("ONE SPLASH OF THIS [[Radiation hazard]] GUARANTEED TO [[/kill @e]] IN RANGE").withStyle(NO_ITALIC)
         )));
-        // Instant Health 125: amplifier 124 (0-based), duration 1 tick
+        // Instant Health 1: amplifier 0 (0-based), duration 1 tick
         stack.set(DataComponents.POTION_CONTENTS, new PotionContents(
                 Optional.empty(),
                 Optional.empty(),
-                List.of(new MobEffectInstance(MobEffects.INSTANT_HEALTH, 1, 124)),
+                List.of(new MobEffectInstance(MobEffects.INSTANT_HEALTH, 1, 0)),
                 Optional.empty()
         ));
+        stack.set(DataComponents.TOOLTIP_DISPLAY, new TooltipDisplay(false, new LinkedHashSet<>(Set.of(DataComponents.POTION_CONTENTS))));
         return stack;
     }
 

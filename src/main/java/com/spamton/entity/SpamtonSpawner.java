@@ -3,6 +3,7 @@ package com.spamton.entity;
 import com.mojang.math.Transformation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -46,7 +47,7 @@ public class SpamtonSpawner {
 
         villager.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         villager.setPersistenceRequired();
-        villager.setCustomName(Component.literal("Spamton"));
+        villager.setCustomName(Component.literal("Spamton").withStyle(Style.EMPTY.withBold(true)));
         villager.setCustomNameVisible(true);
         villager.setNoAi(false);
         villager.getAttribute(Attributes.MAX_HEALTH).setBaseValue(99999.0);

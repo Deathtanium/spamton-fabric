@@ -1,6 +1,7 @@
 package com.spamton.entity;
 
 import com.spamton.trade.SpamtonTradeGenerator;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.protocol.game.ClientboundMerchantOffersPacket;
 import net.minecraft.server.level.ServerLevel;
@@ -25,6 +26,11 @@ public class SpamtonTickHandler {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerLevel world : server.getAllLevels()) {
                 tickWorld(world);
+            }
+        });
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            for (ServerLevel world : server.getAllLevels()) {
+                removeAllMinisAndGlasses(world);
             }
         });
     }
@@ -85,6 +91,7 @@ public class SpamtonTickHandler {
                 villager.removeEffect(MobEffects.INVISIBILITY);
                 SpamtonDamageHandler.clearRecoveryUntil(villager);
             }
+
         }
 
         for (Villager mini : minis) {
@@ -105,7 +112,25 @@ public class SpamtonTickHandler {
     }
 
     public static void onWorldLoad(ServerLevel world) {
-        // One-time cleanup on load: use full bounds (runs once per load, not every tick)
+        removeAllMinisAndGlasses(world);
+        // Clear recovery state for merchants that were in recovery when the server shut down
+        var dim = world.dimensionType();
+        var wb = world.getWorldBorder();
+        AABB bounds = new AABB(wb.getMinX(), dim.minY(), wb.getMinZ(), wb.getMaxX(), dim.minY() + dim.height(), wb.getMaxZ());
+        List<Villager> loadMerchants = world.getEntities(EntityType.VILLAGER, bounds, e -> e.getTags().contains(SpamtonDamageHandler.TAG_SPAMTON_MERCHANT));
+        for (Villager villager : loadMerchants) {
+            if (SpamtonDamageHandler.isInRecovery(villager)) {
+                villager.removeEffect(MobEffects.INVISIBILITY);
+                SpamtonDamageHandler.clearRecoveryUntil(villager);
+            }
+        }
+    }
+
+    /**
+     * Kill all mini-spamtons and remove their glasses. Used on server start and world load to handle the edge case
+     * where the server was shut down during recovery phase (minis would otherwise persist with no merchant).
+     */
+    private static void removeAllMinisAndGlasses(ServerLevel world) {
         var dim = world.dimensionType();
         var wb = world.getWorldBorder();
         AABB bounds = new AABB(wb.getMinX(), dim.minY(), wb.getMinZ(), wb.getMaxX(), dim.minY() + dim.height(), wb.getMaxZ());
@@ -115,13 +140,6 @@ public class SpamtonTickHandler {
             SpamtonDamageHandler.clearMiniExplodeAt(e.getUUID());
             SpamtonDamageHandler.clearMiniBatchSize(e.getUUID());
             e.discard();
-        }
-        List<Villager> loadMerchants = world.getEntities(EntityType.VILLAGER, bounds, e -> e.getTags().contains(SpamtonDamageHandler.TAG_SPAMTON_MERCHANT));
-        for (Villager villager : loadMerchants) {
-            if (SpamtonDamageHandler.isInRecovery(villager)) {
-                villager.removeEffect(MobEffects.INVISIBILITY);
-                SpamtonDamageHandler.clearRecoveryUntil(villager);
-            }
         }
     }
 }

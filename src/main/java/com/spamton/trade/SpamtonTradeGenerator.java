@@ -52,7 +52,7 @@ public class SpamtonTradeGenerator {
             for (Item armorItem : SpamtonSpecialItems.getDogArmorMaterials()) {
                 int armorKromerCost = 1 + r.nextInt(64);
                 list.add(new MerchantOffer(
-                        new ItemCost(Items.PAPER, armorKromerCost),
+                        KromerItem.kromerCost(armorKromerCost, registryAccess),
                         Optional.of(new ItemCost(armorItem, 1)),
                         SpamtonSpecialItems.allDogsGoToHeavenArmor(armorItem, registryAccess),
                         MAX_USES, XP, PRICE_MULT
@@ -63,7 +63,7 @@ public class SpamtonTradeGenerator {
         if (!disabled.contains("fried_pipis")) {
             int friedPipisKromer = 1 + r.nextInt(64);
             list.add(new MerchantOffer(
-                    new ItemCost(Items.PAPER, friedPipisKromer),
+                    KromerItem.kromerCost(friedPipisKromer, registryAccess),
                     SpamtonSpecialItems.friedPipis(64),
                     MAX_USES, XP, PRICE_MULT
             ));
@@ -72,7 +72,7 @@ public class SpamtonTradeGenerator {
         if (!disabled.contains("alpha_leaves")) {
             int alphaLeavesKromer = 1 + r.nextInt(64);
             list.add(new MerchantOffer(
-                    new ItemCost(Items.PAPER, alphaLeavesKromer),
+                    KromerItem.kromerCost(alphaLeavesKromer, registryAccess),
                     SpamtonSpecialItems.alphaLeaves(),
                     MAX_USES, XP, PRICE_MULT
             ));
@@ -80,7 +80,7 @@ public class SpamtonTradeGenerator {
 
         if (!disabled.contains("admin_b_gone")) {
             list.add(new MerchantOffer(
-                    new ItemCost(Items.PAPER, 67),
+                    KromerItem.kromerCost(67, registryAccess),
                     SpamtonSpecialItems.adminBGonePotion(),
                     MAX_USES, XP, PRICE_MULT
             ));
@@ -89,7 +89,7 @@ public class SpamtonTradeGenerator {
         if (!disabled.contains("the")) {
             int theKromerCost = 32 + r.nextInt(33);
             list.add(new MerchantOffer(
-                    new ItemCost(Items.PAPER, theKromerCost),
+                    KromerItem.kromerCost(theKromerCost, registryAccess),
                     TheTradeLootGenerator.createEmptyTheBundle(),
                     1, XP, PRICE_MULT
             ));
@@ -102,13 +102,17 @@ public class SpamtonTradeGenerator {
             if (!entry.randomKromerPrice && (buyItem == null || buyItem == Items.AIR)) continue;
             ItemStack result = new ItemStack(sellItem, Math.max(1, entry.sellCount));
             if (result.isEmpty()) continue;
-            if (entry.sellName != null && !entry.sellName.isEmpty())
-                result.set(DataComponents.CUSTOM_NAME, Component.literal(entry.sellName).withStyle(Style.EMPTY.withItalic(false)));
-            if (entry.sellLore != null && !entry.sellLore.isEmpty()) {
-                List<Component> lines = new ArrayList<>();
-                for (String line : entry.sellLore)
-                    lines.add(Component.literal(line).withStyle(Style.EMPTY.withItalic(false)));
-                result.set(DataComponents.LORE, new ItemLore(lines));
+            if (entry.sellComponents != null && !entry.sellComponents.isEmpty()) {
+                ItemStackComponents.apply(result, entry.sellComponents, registryAccess);
+            } else {
+                if (entry.sellName != null && !entry.sellName.isEmpty())
+                    result.set(DataComponents.CUSTOM_NAME, Component.literal(entry.sellName).withStyle(Style.EMPTY.withItalic(false)));
+                if (entry.sellLore != null && !entry.sellLore.isEmpty()) {
+                    List<Component> lines = new ArrayList<>();
+                    for (String line : entry.sellLore)
+                        lines.add(Component.literal(line).withStyle(Style.EMPTY.withItalic(false)));
+                    result.set(DataComponents.LORE, new ItemLore(lines));
+                }
             }
             Optional<ItemCost> second = Optional.empty();
             if (entry.buyBId != null && entry.buyBCount > 0) {
@@ -123,7 +127,7 @@ public class SpamtonTradeGenerator {
                 kromerAmount = min + r.nextInt(Math.max(1, max - min + 1));
             }
             ItemCost firstCost = entry.randomKromerPrice
-                    ? new ItemCost(Items.PAPER, kromerAmount)
+                    ? KromerItem.kromerCost(kromerAmount, registryAccess)
                     : new ItemCost(buyItem, Math.max(1, entry.buyCount));
             list.add(new MerchantOffer(
                     firstCost,
@@ -158,7 +162,7 @@ public class SpamtonTradeGenerator {
         for (int i = 0; i < current.size() - 1; i++) next.add(current.get(i));
         int kromerCost = Math.max(1, last.getItemCostA().count());
         next.add(new MerchantOffer(
-                new ItemCost(Items.PAPER, kromerCost),
+                KromerItem.kromerCost(kromerCost, registryAccess),
                 TheTradeLootGenerator.createEmptyTheBundle(),
                 1, XP, PRICE_MULT
         ));

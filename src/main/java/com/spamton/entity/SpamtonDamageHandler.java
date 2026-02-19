@@ -59,11 +59,9 @@ public class SpamtonDamageHandler {
         });
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (entity.getTags().contains(TAG_SPAMTON_MERCHANT) || entity.getTags().contains(TAG_SPAMTON_MINI)) {
-                if (entity.level() instanceof ServerLevel world) {
-                    SpamtonSpawner.deleteGlasses(world, entity.getUUID());
-                }
-            }
+            if (!(entity.getTags().contains(TAG_SPAMTON_MERCHANT) || entity.getTags().contains(TAG_SPAMTON_MINI))) return;
+            if (!(entity.level() instanceof ServerLevel world)) return;
+            SpamtonSpawner.deleteGlasses(world, entity.getUUID());
         });
     }
 

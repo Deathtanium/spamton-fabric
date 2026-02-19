@@ -122,6 +122,7 @@ public class SpamtonConfig {
             JsonArray disabled = new JsonArray();
             for (String s : disabledTrades) disabled.add(s);
             root.add("disabledTrades", disabled);
+            root.addProperty("theBundleUseAllSurvivalItems", theBundleUseAllSurvivalItems);
             JsonArray theLoot = new JsonArray();
             for (TheBundleLootEntry e : theBundleLoot) {
                 JsonObject o = new JsonObject();
@@ -149,7 +150,9 @@ public class SpamtonConfig {
                 JsonObject sell = new JsonObject();
                 sell.addProperty("id", e.sellId);
                 sell.addProperty("count", e.sellCount);
-                if (e.sellName != null || (e.sellLore != null && !e.sellLore.isEmpty())) {
+                if (e.sellComponents != null && !e.sellComponents.entrySet().isEmpty()) {
+                    sell.add("components", e.sellComponents.deepCopy());
+                } else if (e.sellName != null || (e.sellLore != null && !e.sellLore.isEmpty())) {
                     JsonObject comp = new JsonObject();
                     if (e.sellName != null) {
                         JsonObject name = new JsonObject();
@@ -196,23 +199,12 @@ public class SpamtonConfig {
             entry.sellCount = sell.has("count") ? sell.get("count").getAsInt() : 1;
             if (sell.has("components") && sell.get("components").isJsonObject()) {
                 JsonObject comp = sell.getAsJsonObject("components");
+                entry.sellComponents = comp.deepCopy();
                 if (comp.has("custom_name")) {
-                    if (comp.get("custom_name").isJsonPrimitive())
-                        entry.sellName = comp.get("custom_name").getAsString();
-                    else if (comp.get("custom_name").isJsonObject() && comp.getAsJsonObject("custom_name").has("text"))
-                        entry.sellName = comp.getAsJsonObject("custom_name").get("text").getAsString();
+                    entry.sellName = parseCustomName(comp.get("custom_name"));
                 }
                 if (comp.has("lore") && comp.get("lore").isJsonArray()) {
-                    entry.sellLore = new ArrayList<>();
-                    for (var lineEl : comp.getAsJsonArray("lore")) {
-                        if (!lineEl.isJsonArray()) continue;
-                        StringBuilder line = new StringBuilder();
-                        for (var segEl : lineEl.getAsJsonArray()) {
-                            if (segEl.isJsonObject() && segEl.getAsJsonObject().has("text"))
-                                line.append(segEl.getAsJsonObject().get("text").getAsString());
-                        }
-                        if (line.length() > 0) entry.sellLore.add(line.toString());
-                    }
+                    entry.sellLore = parseLore(comp.getAsJsonArray("lore"));
                 }
             }
         }
@@ -248,6 +240,42 @@ public class SpamtonConfig {
         return id.contains(":") ? id : "minecraft:" + id;
     }
 
+    /** Parse custom_name: string, single {text}, or array [{text,...},{text,...}] (summon-style). */
+    private static String parseCustomName(com.google.gson.JsonElement el) {
+        if (el == null) return null;
+        if (el.isJsonPrimitive()) return el.getAsString();
+        if (el.isJsonObject() && el.getAsJsonObject().has("text"))
+            return el.getAsJsonObject().get("text").getAsString();
+        if (el.isJsonArray()) {
+            StringBuilder sb = new StringBuilder();
+            for (var part : el.getAsJsonArray()) {
+                if (part.isJsonObject() && part.getAsJsonObject().has("text"))
+                    sb.append(part.getAsJsonObject().get("text").getAsString());
+            }
+            return sb.length() > 0 ? sb.toString() : null;
+        }
+        return null;
+    }
+
+    /** Parse lore: array of lines; each line is string or array [{text,...}] (summon-style). */
+    private static List<String> parseLore(com.google.gson.JsonArray loreArr) {
+        if (loreArr == null) return null;
+        List<String> out = new ArrayList<>();
+        for (var lineEl : loreArr) {
+            if (lineEl.isJsonPrimitive())
+                out.add(lineEl.getAsString());
+            else if (lineEl.isJsonArray()) {
+                StringBuilder line = new StringBuilder();
+                for (var segEl : lineEl.getAsJsonArray()) {
+                    if (segEl.isJsonObject() && segEl.getAsJsonObject().has("text"))
+                        line.append(segEl.getAsJsonObject().get("text").getAsString());
+                }
+                out.add(line.toString());
+            }
+        }
+        return out.isEmpty() ? null : out;
+    }
+
     private static TheBundleLootEntry parseTheBundleLootEntry(JsonObject o) {
         if (!o.has("id") || !o.has("weight")) return null;
         String id = o.get("id").getAsString();
@@ -279,6 +307,8 @@ public class SpamtonConfig {
         public int buyBCount = 0;
         public String sellId;
         public int sellCount = 1;
+        /** Raw components JSON (all keys preserved). When non-null, applied via game codecs at trade build time. */
+        public JsonObject sellComponents;
         public String sellName;
         public List<String> sellLore;
         public int maxUses = 999;
